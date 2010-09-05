@@ -54,6 +54,7 @@ class FFN {
 		foreach ($doc->getElementsByTagName("Game") AS $game) {
 			$obj->Games[] = (object) array(
 				"Week"		=> $game->getAttribute("Week"),
+				"gameId"	=> $game->getAttribute("gameId"),
 				"GameDate"	=> $game->getAttribute("GameDate"),
 				"HomeTeam"	=> $game->getAttribute("HomeTeam"),
 				"AwayTeam"	=> $game->getAttribute("AwayTeam"),
