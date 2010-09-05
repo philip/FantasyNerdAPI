@@ -2,19 +2,23 @@
 /**
 This page will create the FFN object and then show you how to call the different methods 
 to return the information that you want. The first thing you need to do is register for an 
-API Key at FantasyFootballNerd.com.  When you register for one, enter into the $apiKey 
+API Key at FantasyFootballNerd.com.  When you register for one, enter into the API_KEY 
 variable below.  You won't be able to get data without an API key.
 **/
 
-$apiKey = "2010090440152326";	//-- Replace 0000 with your API key 
+define('API_KEY', '2010090440152326'); // //-- Replace 0000 with your API key 
+define('PHP_SELF', htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'));
 
 require_once("FFN.class.php");
 
-$ffn = new FFN($apiKey);
+$ffn = new FFN(API_KEY);
 
-if (!$apiKey) {
-	exit("You didn't set the apiKey variable");
+if (!API_KEY) {
+	echo 'You did not set the API_KEY for your application. This is required.';
+	exit;
 }
+
+$display = isset($_GET['display']) ? $_GET['display'] : FALSE;
 ?>
 
 <html>
@@ -25,17 +29,17 @@ if (!$apiKey) {
 
 <h2>FantasyFootballNerd.com API Test</h2>
 <ul>
-<li><a href="<?php echo $_SERVER['PHP_SELF']; ?>?display=schedule">Get Season Schedule</a></li>
-<li><a href="<?php echo $_SERVER['PHP_SELF']; ?>?display=players">Get All NFL Players</a></li>
-<li><a href="<?php echo $_SERVER['PHP_SELF']; ?>?display=playerDetails">Get Player Details</a></li>
-<li><a href="<?php echo $_SERVER['PHP_SELF']; ?>?display=draftRankings">Get Draft Rankings</a></li>
-<li><a href="<?php echo $_SERVER['PHP_SELF']; ?>?display=injuries">Get Injuries</a></li>
-<li><a href="<?php echo $_SERVER['PHP_SELF']; ?>?display=weeklyRankings">Get Weekly Rankings</a></li>
+<li><a href="<?php echo PHP_SELF; ?>?display=schedule">Get Season Schedule</a></li>
+<li><a href="<?php echo PHP_SELF; ?>?display=players">Get All NFL Players</a></li>
+<li><a href="<?php echo PHP_SELF; ?>?display=playerDetails">Get Player Details</a></li>
+<li><a href="<?php echo PHP_SELF; ?>?display=draftRankings">Get Draft Rankings</a></li>
+<li><a href="<?php echo PHP_SELF; ?>?display=injuries">Get Injuries</a></li>
+<li><a href="<?php echo PHP_SELF; ?>?display=weeklyRankings">Get Weekly Rankings</a></li>
 </ul>
 
 <div style="height:10px;border-top:1px solid #3366CC;"></div>
 <?php /**************************************************/ ?>
-<?php if ($_GET['display'] == "schedule") {
+<?php if ($display == "schedule") {
 
 //-- Get this year's schedule --
 $schedule = $ffn->getSchedule();
@@ -50,7 +54,7 @@ $schedule = $ffn->getSchedule();
 <?php } ?>
 
 <?php /**************************************************/ ?>
-<?php if ($_GET['display'] == "players") {
+<?php if ($display == "players") {
 
 //-- Get the players --
 $players = $ffn->getPlayers();
@@ -64,15 +68,15 @@ $players = $ffn->getPlayers();
 <?php } ?>
 
 <?php /**************************************************/ ?>
-<?php if ($_GET['display'] == "playerDetails" && !$_GET['playerId']) { ?>
-<form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="get">
+<?php if ($display == "playerDetails" && empty($_GET['playerId'])) { ?>
+<form action="<?php echo PHP_SELF; ?>" method="get">
 <input type="hidden" name="display" value="playerDetails" />
 <p>FFN playerId: <input type="text" name="playerId" size="4" /></p>
 <p><input type="submit" /></p>
 </form>
 <?php } ?>
 
-<?php if ($_GET['display'] == "playerDetails" && $_GET['playerId']) { 
+<?php if ($display == "playerDetails" && isset($_GET['playerId'])) { 
 $playerDetails = $ffn->getPlayerDetails($_GET['playerId']);
 ?>
 	<h4>Player Details</h4>
@@ -87,8 +91,8 @@ $playerDetails = $ffn->getPlayerDetails($_GET['playerId']);
 <?php } ?>
 
 <?php /**************************************************/ ?>
-<?php if ($_GET['display'] == "draftRankings" && !$_GET['position']) { ?>
-<form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="get">
+<?php if ($display == "draftRankings" && empty($_GET['position'])) { ?>
+<form action="<?php echo PHP_SELF; ?>" method="get">
 <input type="hidden" name="display" value="draftRankings" />
 <p>Position: <select name="position" size="1"><option value="ALL" selected>ALL</option><option value="QB">QB</option><option value="RB">RB</option><option value="WR">WR</option><option value="TE">TE</option><option value="DEF">DEF</option><option value="K">K</option></select></p>
 <p># of Results: <input type="text" name="limit" size="4" value="10" /> (1 - 1000)</p>
@@ -98,7 +102,7 @@ $playerDetails = $ffn->getPlayerDetails($_GET['playerId']);
 <?php } ?>
 
 
-<?php if ($_GET['display'] == "draftRankings" && $_GET['position']) { 
+<?php if ($display == "draftRankings" && $_GET['position']) { 
 $draft = $ffn->getDraftRankings($_GET['position'], $_GET['limit'], $_GET['sos']);
 ?>
 	<h4>Preseason Draft Rankings</h4>
@@ -116,7 +120,7 @@ $draft = $ffn->getDraftRankings($_GET['position'], $_GET['limit'], $_GET['sos'])
 
 
 <?php /**************************************************/ ?>
-<?php if ($_GET['display'] == "injuries") {
+<?php if ($display == "injuries") {
 
 //-- Get the injuries for a specific week (replace "1" with a week number) --
 $injuries = $ffn->getInjuries("1");
@@ -131,8 +135,8 @@ $injuries = $ffn->getInjuries("1");
 
 
 <?php /**************************************************/ ?>
-<?php if ($_GET['display'] == "weeklyRankings" && !$_GET['position'] && !$_GET['week']) { ?>
-<form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="get">
+<?php if ($display == "weeklyRankings" && empty($_GET['position']) && empty($_GET['week'])) { ?>
+<form action="<?php echo PHP_SELF; ?>" method="get">
 <input type="hidden" name="display" value="weeklyRankings" />
 <p>Position: <select name="position" size="1"><option value="QB" selected>QB</option><option value="RB">RB</option><option value="WR">WR</option><option value="TE">TE</option><option value="DEF">DEF</option><option value="K">K</option></select></p>
 <p>Week: <select name="week" size="1"><?php for ($i = 1; $i < 18; $i++){echo "<option value='$i'>$i</option>";} ?></select></p>
@@ -140,7 +144,7 @@ $injuries = $ffn->getInjuries("1");
 </form>
 <?php } ?>
 
-<?php if ($_GET['display'] == "weeklyRankings" && $_GET['position'] && $_GET['week']) { 
+<?php if ($display == "weeklyRankings" && isset($_GET['position']) && isset($_GET['week'])) { 
 $sitStart = $ffn->getWeeklyRankings($_GET['position'], $_GET['week']);
 ?>
 	<h4>Weekly Sit/Start Rankings</h4>
@@ -150,14 +154,14 @@ $sitStart = $ffn->getWeeklyRankings($_GET['position'], $_GET['week']);
 <?php } ?>
 
 
-<?php if (!$_GET['display']) { ?>
+<?php if (!$display) { ?>
 
 	<p>Here's the basic way to communicate with the FFN API. Don't forget to store the data locally in your own database to be kind to the FFN server.</p>
 	<p>First instantiate the FFN object</p>
 	<code>
-	$apiKey = "0000";	//-- Replace the 0000 with your API key<br />
+	define('API_KEY', '0000');	//-- Replace the 0000 with your API key<br />
 	require_once("FFN.class.php");<br />
-	$ffn = new FFN($apiKey);
+	$ffn = new FFN(API_KEY);
 	</code>
 	<p>The following are the various methods that you can call with the ffn object.  Each will return an array of objects for that particular service.</p>
 	<ul>
