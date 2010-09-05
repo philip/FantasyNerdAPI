@@ -45,7 +45,8 @@ class FFN {
 		$data = $this->call($endpoint);
 
 		$obj = new stdClass;
-		$doc = DOMDocument::loadXML($data);
+		$doc = new DOMDocument();
+		$doc->loadXML($data);
 		$obj->Season   = $doc->getElementsByTagName("Schedule")->item(0)->getAttribute("Season");
 		$obj->Timezone = $doc->getElementsByTagName("Schedule")->item(0)->getAttribute("Timezone");
 		$obj->Games    = array();
@@ -76,7 +77,8 @@ class FFN {
 		$data = $this->call($endpoint);
 
 		$obj = new stdClass;
-		$doc = DOMDocument::loadXML($data);
+		$doc = new DOMDocument();
+		$doc->loadXML($data);
 
 		if ($doc->getElementsByTagName("Error")->length > 0) {
 			$this->errorMsg = $doc->getElementsByTagName("Error")->item(0)->nodeValue;
@@ -108,7 +110,8 @@ class FFN {
 		$data = $this->call($endpoint);
 
 		$obj = new stdClass;
-		$doc = DOMDocument::loadXML($data);
+		$doc = new DOMDocument();
+		$doc->loadXML($data);
 
 		if ($doc->getElementsByTagName("Error")->length > 0) {
 			$this->errorMsg = $doc->getElementsByTagName("Error")->item(0)->nodeValue;
@@ -146,7 +149,8 @@ class FFN {
 		$data = $this->call($endpoint);
 
 		$obj = new stdClass;
-		$doc = DOMDocument::loadXML($data);
+		$doc = new DOMDocument();
+		$doc->loadXML($data);
 
 		if ($doc->getElementsByTagName("Error")->length > 0) {
 			$this->errorMsg = $doc->getElementsByTagName("Error")->item(0)->nodeValue;
@@ -195,7 +199,8 @@ class FFN {
 		$data = $this->call($endpoint);
 
 		$obj = new stdClass;
-		$doc = DOMDocument::loadXML($data);
+		$doc = new DOMDocument();
+		$doc->loadXML($data);
 
 		if ($doc->getElementsByTagName("Error")->length > 0) {
 			$this->errorMsg = $doc->getElementsByTagName("Error")->item(0)->nodeValue;
@@ -240,7 +245,8 @@ class FFN {
 		$data = $this->call($endpoint);
 
 		$obj = new stdClass;
-		$doc = DOMDocument::loadXML($data);
+		$doc = new DOMDocument();
+		$doc->loadXML($data);
 
 		if ($doc->getElementsByTagName("Error")->length > 0) {
 			$this->errorMsg = $doc->getElementsByTagName("Error")->item(0)->nodeValue;
