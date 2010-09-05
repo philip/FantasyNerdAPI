@@ -6,7 +6,7 @@ API Key at FantasyFootballNerd.com.  When you register for one, enter into the A
 variable below.  You won't be able to get data without an API key.
 **/
 
-define('API_KEY', '2010090440152326'); // //-- Replace 0000 with your API key 
+define('API_KEY', '0000'); // //-- Replace 0000 with your API key 
 define('PHP_SELF', htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'));
 
 require_once("FFN.class.php");
