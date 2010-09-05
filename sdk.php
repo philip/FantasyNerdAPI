@@ -102,7 +102,7 @@ $playerDetails = $ffn->getPlayerDetails($_GET['playerId']);
 <?php } ?>
 
 
-<?php if ($display == "draftRankings" && $_GET['position']) { 
+<?php if ($display == "draftRankings" && isset($_GET['position'])) { 
 $draft = $ffn->getDraftRankings($_GET['position'], $_GET['limit'], $_GET['sos']);
 ?>
 	<h4>Preseason Draft Rankings</h4>
