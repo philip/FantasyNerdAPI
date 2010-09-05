@@ -38,123 +38,177 @@ $display = isset($_GET['display']) ? $_GET['display'] : FALSE;
 </ul>
 
 <div style="height:10px;border-top:1px solid #3366CC;"></div>
-<?php /**************************************************/ ?>
-<?php if ($display == "schedule") {
+<?php
+/**** League Schedule **********************************************/
+if ($display == "schedule") {
 
-//-- Get this year's schedule --
-$schedule = $ffn->getSchedule();
+	$schedule = $ffn->getSchedule();
+	
+	echo '<h4>Season Schedule</h4>';
+	echo '<p>Season: ', $schedule->Season, '</p>';
+	
+	foreach($schedule->Games AS $game) {
+		echo '<p>';
+		echo 'Week: ', $game->Week, ' ', $game->AwayTeam, ' at ', $game->HomeTeam, ' on ', date("M j, Y", strtotime($game->GameDate)), ' at ', $game->GameTime, ' ', $schedule->Timezone;
+		echo '</p>';
+	}
+}
 
-//-- Loop through the schedule --
-?>
-	<h4>Season Schedule</h4>
-	<p>Season: <?php echo $schedule->Season; ?></p>
-	<?php foreach($schedule->Games AS $game) { ?>
-	<p>Week: <?php echo $game->Week; ?> <?php echo $game->AwayTeam; ?> at <?php echo $game->HomeTeam; ?> on <?php echo date("M j, Y", strtotime($game->GameDate)); ?> at <?php echo $game->GameTime; ?> <?php echo $schedule->Timezone; ?></p>
-	<?php } ?>
-<?php } ?>
+/**** Player Listing **********************************************/ 
+if ($display == "players") {
 
-<?php /**************************************************/ ?>
-<?php if ($display == "players") {
+	$players = $ffn->getPlayers();
+	
+	echo '<h4>All NFL Players</h4>';
+	foreach($players->Players AS $player) {
+		echo '<p>';
+		echo playerLink($player->playerId, $player->Name), ' : ', $player->Position, ' : ', $player->Team;
+		echo '</p>';
+	}
+}
 
-//-- Get the players --
-$players = $ffn->getPlayers();
+/**** Player Details **********************************************/
+if ($display == "playerDetails") {
+	
+	if (empty($_GET['playerId'])) {
+	?>
+		<form action="<?php echo PHP_SELF; ?>" method="get">
+		<input type="hidden" name="display" value="playerDetails" />
+		<p>FFN playerId: <input type="text" name="playerId" size="4" /></p>
+		<p><input type="submit" /></p>
+		</form>
+	<?php 
+	} else {
+	
+		$playerDetails = $ffn->getPlayerDetails($_GET['playerId']);
+		
+		echo '<h4>Player Details</h4>';
+		echo '<p>First Name: ', $playerDetails->FirstName, '</p>';
+		echo '<p>Last Name: ',  $playerDetails->LastName,  '</p>';
+		echo '<p>Team: ', $playerDetails->Team, '</p>';
+		echo '<p>Position: ', $playerDetails->Position, '</p>';
+		echo '<p><strong>Articles</strong></p>';
+		
+		foreach($playerDetails->News AS $story) {
+			echo '<p><a href="', $story->Source, '">', $story->Title, '</a> Published: ', $story->Published, '</p>';
+		}
+	}
+}
 
-//-- Loop through the players --
-?>
-	<h4>All NFL Players</h4>
-	<?php foreach($players->Players AS $player) { ?>
-	<p><?php echo $player->Name; ?> <?php echo $player->Position; ?> : <?php echo $player->Team; ?> (FFN PlayerID: <?php echo $player->playerId; ?>)</p>
-	<?php } ?>
-<?php } ?>
+/**** Draft Rankings **********************************************/
+if ($display == "draftRankings") {
+	
+	if (empty($_GET['position'])) {
+	?>
+		<form action="<?php echo PHP_SELF; ?>" method="get">
+		<input type="hidden" name="display" value="draftRankings" />
+		<p>Position: 
+			<select name="position" size="1">
+				<option value="ALL" selected>ALL</option>
+				<option value="QB">QB</option>
+				<option value="RB">RB</option>
+				<option value="WR">WR</option>
+				<option value="TE">TE</option>
+				<option value="DEF">DEF</option>
+				<option value="K">K</option>
+			</select>
+		</p>
+		<p># of Results: <input type="text" name="limit" size="4" value="10" /> (1 - 1000)</p>
+		<p>Include Strength of Schedule? 
+			<select name="sos" size="1">
+				<option value="1" selected>Yes</option>
+				<option value="0">No</option>
+			</select>
+		</p>
+		<p><input type="submit" name="submit" value="submit"/></p>
+		</form>
+	<?php
+	} else {
 
-<?php /**************************************************/ ?>
-<?php if ($display == "playerDetails" && empty($_GET['playerId'])) { ?>
-<form action="<?php echo PHP_SELF; ?>" method="get">
-<input type="hidden" name="display" value="playerDetails" />
-<p>FFN playerId: <input type="text" name="playerId" size="4" /></p>
-<p><input type="submit" /></p>
-</form>
-<?php } ?>
+		$draft = $ffn->getDraftRankings($_GET['position'], $_GET['limit'], $_GET['sos']);
+		
+		echo '<h4>Preseason Draft Rankings</h4>';
+		echo '<p>The last number is the defensive rank, where a lower number means a tougher defense.</p>';
+		foreach($draft->Players AS $player) {
+			echo '<p>';
+			echo playerLink($player->playerId, $player->PlayerName), ' ', $player->Team, ' ', $player->Position;
+			echo ' Overall Rank: ', $player->OverallRank, ' Rank among ', $player->Position, "'s: ", $player->PositionRank, ' Bye Week: ', $player->ByeWeek;
+			echo '</p>';
+			
+			if (count($player->StrengthOfSchedule) > 0) {
+				echo '<p>';
+				foreach ($player->StrengthOfSchedule AS $sched) {
+					echo 'Week ', $sched->WeekNumber, ' vs ', $sched->Opponent, ' : ', $sched->DefensiveRank, '<br />';
+				}
+			}
+			echo '</p>';
+		}
+	}
+}
 
-<?php if ($display == "playerDetails" && isset($_GET['playerId'])) { 
-$playerDetails = $ffn->getPlayerDetails($_GET['playerId']);
-?>
-	<h4>Player Details</h4>
-	<p>First Name: <?php echo $playerDetails->FirstName; ?></p>
-	<p>Last Name: <?php echo $playerDetails->LastName; ?></p>
-	<p>Team: <?php echo $playerDetails->Team; ?></p>
-	<p>Position: <?php echo $playerDetails->Position; ?></p>
-	<p><strong>Articles</strong></p>
-	<?php foreach($playerDetails->News AS $story) { ?>
-	<p><a href="<?php echo $story->Source; ?>"><?php echo $story->Title; ?></a> Published: <?php echo $story->Published; ?></p>
-	<?php } ?>
-<?php } ?>
+/**** Player Injuries **********************************************/
+if ($display == "injuries") {
 
-<?php /**************************************************/ ?>
-<?php if ($display == "draftRankings" && empty($_GET['position'])) { ?>
-<form action="<?php echo PHP_SELF; ?>" method="get">
-<input type="hidden" name="display" value="draftRankings" />
-<p>Position: <select name="position" size="1"><option value="ALL" selected>ALL</option><option value="QB">QB</option><option value="RB">RB</option><option value="WR">WR</option><option value="TE">TE</option><option value="DEF">DEF</option><option value="K">K</option></select></p>
-<p># of Results: <input type="text" name="limit" size="4" value="10" /> (1 - 1000)</p>
-<p>Include Strength of Schedule? <select name="sos" size="1"><option value="1" selected>Yes</option><option value="0">No</option></select></p>
-<p><input type="submit" /></p>
-</form>
-<?php } ?>
+	//-- Get the injuries for a specific week (replace "1" with a week number) --
+	// @todo handle week number
+	$injuries = $ffn->getInjuries("1");
+	
+	echo '<h4>Injuries</h4>';
 
+	foreach($injuries->Injuries AS $inj) {
+		echo '<p>';
+		echo 'Week: ', $inj->Week, ' ', $inj->Player, ' ', $inj->Team, ' ', $inj->Position;
+		echo ' Injury: ', $inj->Injury, ' Practice Status: ', $inj->PracticeStatus, ' Game Status: ', $inj->GameStatus, ' Updated on ', date("M j, Y", strtotime($inj->Updated));
+		echo '</p>';
+	}
+}
 
-<?php if ($display == "draftRankings" && isset($_GET['position'])) { 
-$draft = $ffn->getDraftRankings($_GET['position'], $_GET['limit'], $_GET['sos']);
-?>
-	<h4>Preseason Draft Rankings</h4>
-	<?php foreach($draft->Players AS $player) { ?>
-	<p><?php echo $player->PlayerName; ?> (FFN playerId: <?php echo $player->playerId; ?>) <?php echo $player->Team; ?> <?php echo $player->Position; ?> Overall Rank: <?php echo $player->OverallRank; ?> Rank among <?php echo $player->Position; ?>'s: <?php echo $player->PositionRank; ?> Bye Week: <?php echo $player->ByeWeek; ?></p>
-		<?php if (count($player->StrengthOfSchedule) > 0) { ?>
-			<p>
-			<?php foreach ($player->StrengthOfSchedule AS $sched) { ?>
-			Week <?php echo $sched->WeekNumber; ?> vs <?php echo $sched->Opponent; ?> : <?php echo $sched->DefensiveRank; ?> (the lower the number, the tougher the defense)<br />
-			<?php } ?>
+/**** Weekly Rankings **********************************************/
+if ($display == "weeklyRankings") {
+	
+	if (empty($_GET['position']) && empty($_GET['week'])) {
+	?>
+		<form action="<?php echo PHP_SELF; ?>" method="get">
+			<input type="hidden" name="display" value="weeklyRankings" />
+			<p>Position: 
+			<select name="position" size="1">
+				<option value="QB" selected>QB</option>
+				<option value="RB">RB</option>
+				<option value="WR">WR</option>
+				<option value="TE">TE</option>
+				<option value="DEF">DEF</option>
+				<option value="K">K</option>
+			</select>
 			</p>
-		<?php } ?>
-	<?php } ?>
-<?php } ?>
+			<p>Week: 
+			<select name="week" size="1">
+				<?php 
+				for ($i = 1; $i < 18; $i++) {
+					echo "<option value='$i'>$i</option>";
+				} 
+				?>
+			</select>
+			</p>
+			<p><input type="submit" /></p>
+		</form>
+	<?php 
+	} else {
 
+		$sitStart = $ffn->getWeeklyRankings($_GET['position'], $_GET['week']);
+		
+		echo '<h4>Weekly Sit/Start Rankings</h4>';
+		foreach($sitStart->Players AS $player) {
+			echo '<p>';
+			echo playerLink($player->playerId, $player->PlayerName), ' ', $player->Team, ' ', $player->Position, ' Rank: ', $player->Rank;
+			echo ' Standard Scoring: Low ', $player->StandardLow, ' Nerd Proj ', $player->StandardPoints, ' High ', $player->StandardHigh;
+			echo ' PPR: Low ', $player->PPRLow, ' Nerd Proj ', $player->PPR, ' High ', $player->PPRHigh;
+			echo '</p>';
+		}
+	}
+}
 
-<?php /**************************************************/ ?>
-<?php if ($display == "injuries") {
-
-//-- Get the injuries for a specific week (replace "1" with a week number) --
-$injuries = $ffn->getInjuries("1");
+if (!$display) {
 ?>
-	<h4>Injuries</h4>
-
-	<?php foreach($injuries->Injuries AS $inj) { ?>
-	<p>Week: <?php echo $inj->Week; ?> <?php echo $inj->Player; ?> (playerId: <?php echo $inj->playerId; ?>) <?php echo $inj->Team; ?> <?php echo $inj->Position; ?> Injury: <?php echo $inj->Injury; ?> Practice Status: <?php echo $inj->PracticeStatus; ?> Game Status: <?php echo $inj->GameStatus; ?> Updated on <?php echo date("M j, Y", strtotime($inj->Updated)); ?></p>
-	<?php } ?>
-
-<?php } ?>
-
-
-<?php /**************************************************/ ?>
-<?php if ($display == "weeklyRankings" && empty($_GET['position']) && empty($_GET['week'])) { ?>
-<form action="<?php echo PHP_SELF; ?>" method="get">
-<input type="hidden" name="display" value="weeklyRankings" />
-<p>Position: <select name="position" size="1"><option value="QB" selected>QB</option><option value="RB">RB</option><option value="WR">WR</option><option value="TE">TE</option><option value="DEF">DEF</option><option value="K">K</option></select></p>
-<p>Week: <select name="week" size="1"><?php for ($i = 1; $i < 18; $i++){echo "<option value='$i'>$i</option>";} ?></select></p>
-<p><input type="submit" /></p>
-</form>
-<?php } ?>
-
-<?php if ($display == "weeklyRankings" && isset($_GET['position']) && isset($_GET['week'])) { 
-$sitStart = $ffn->getWeeklyRankings($_GET['position'], $_GET['week']);
-?>
-	<h4>Weekly Sit/Start Rankings</h4>
-	<?php foreach($sitStart->Players AS $player) { ?>
-	<p><?php echo $player->PlayerName; ?> (FFN playerId: <?php echo $player->playerId; ?>) <?php echo $player->Team; ?> <?php echo $player->Position; ?> Rank: <?php echo $player->Rank; ?> Standard Scoring: Low <?php echo $player->StandardLow; ?> Nerd Proj <?php echo $player->StandardPoints; ?> High <?php echo $player->StandardHigh; ?> PPR: Low <?php echo $player->PPRLow; ?> Nerd Proj <?php echo $player->PPR; ?> High <?php echo $player->PPRHigh; ?></p>
-	<?php } ?>
-<?php } ?>
-
-
-<?php if (!$display) { ?>
 
 	<p>Here's the basic way to communicate with the FFN API. Don't forget to store the data locally in your own database to be kind to the FFN server.</p>
 	<p>First instantiate the FFN object</p>
@@ -175,9 +229,17 @@ $sitStart = $ffn->getWeeklyRankings($_GET['position'], $_GET['week']);
 	<p>View the samples on this page to retrieve data for each of the various services above.</p>
 	<p>This is a work in progress, so please email <a href="mailto:nerd@fantasyfootballnerd.com">nerd@fantasyfootballnerd.com</a> with questions, bug reports, etc.</p>
 
-<?php } ?>
+<?php 
+}
 
-<?php if ($ffn->errorMsg) {echo "<p style='font-weight:bold;color:red;'>" . $ffn->errorMsg . "</p>";} ?>
+if ($ffn->errorMsg) {
+	echo "<p style='font-weight:bold;color:red;'>" . $ffn->errorMsg . "</p>";
+}
+
+function playerLink($player_id, $player_name) {
+	echo ' <a href="', PHP_SELF, '?display=playerDetails&playerId=', $player_id, '">', $player_name, '</a> ';
+}
+?>
 
 </body>
 </html>
