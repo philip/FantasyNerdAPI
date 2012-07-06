@@ -179,7 +179,10 @@ class FFN {
 					);
 				}
 			}
-			$p['StrengthOfSchedule'] = $weeks;
+			
+			if ($sos) {
+				$p['StrengthOfSchedule'] = $weeks;
+			}
 			$obj->Players[] = (object)$p;
 		}
 		return $obj;

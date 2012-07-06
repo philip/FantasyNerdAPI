@@ -139,7 +139,7 @@ if ($display == "draftRankings") {
 			echo ' Overall Rank: ', $player->OverallRank, ' Rank among ', $player->Position, "'s: ", $player->PositionRank, ' Bye Week: ', $player->ByeWeek;
 			echo '</p>';
 			
-			if (count($player->StrengthOfSchedule) > 0) {
+			if (!empty($player->StrengthOfSchedule)) {
 				echo '<p>';
 				foreach ($player->StrengthOfSchedule AS $sched) {
 					echo 'Week ', $sched->WeekNumber, ' vs ', $sched->Opponent, ' : ', $sched->DefensiveRank, '<br />';
