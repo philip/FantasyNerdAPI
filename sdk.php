@@ -3,10 +3,14 @@
 This page will create the FFN object and then show you how to call the different methods 
 to return the information that you want. The first thing you need to do is register for an 
 API Key at FantasyFootballNerd.com.  When you register for one, enter into the API_KEY 
-variable below.  You won't be able to get data without an API key.
+constant below.  You won't be able to get data without an API key. This is the only
+edit you are required to make, here.
 **/
 
-define('API_KEY', '0000'); // //-- Replace 0000 with your API key 
+// Just to be sure. This error is annoying.
+date_default_timezone_set('UTC');
+
+define('API_KEY', ''); // //-- Insert your API key 
 define('PHP_SELF', htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'));
 
 require_once("FFN.class.php");
