@@ -8,6 +8,11 @@
  * @author J. Joseph Dyken <nerd@fantasyfootballnerd.com>
  * @copyright Copyright (c) 2010, TayTech, LLC
  * @version 1.1 2010-08-21
+ *
+ * This is a fork of the above. Author information for the fork:
+ * @author Philip Olson <philip@roshambo.org>
+ * Version is not being tracked at this time. See https://github.com/philip/FantasyNerdAPI for commit history.
+ *
 **/
 class FFN {
 
