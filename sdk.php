@@ -22,6 +22,9 @@ if (!API_KEY) {
 	exit;
 }
 
+// Test setup/environment
+$ffn->test_setup();
+
 $display = isset($_GET['display']) ? $_GET['display'] : FALSE;
 ?>
 

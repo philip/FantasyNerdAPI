@@ -296,5 +296,21 @@ class FFN {
 
 		return $output;
 	}//-----------------------------
+
+	/**
+	 * Utility to check if the PHP environment will work with this class.
+	 * TODO: What else is required?
+	 *
+	**/
+	public function test_setup() {
+		$extensions = array('dom', 'curl');
+		foreach ($extensions as $extension) {
+			if (!extension_loaded($extension)) {
+				echo "Fatal Error: The $extension extension is required by this class.";
+				exit;
+			}
+		}
+		return true;
+	}
 }
 ?>
