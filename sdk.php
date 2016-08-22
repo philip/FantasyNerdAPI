@@ -10,7 +10,7 @@ edit you are required to make, here.
 // Just to be sure. This error is annoying.
 date_default_timezone_set('UTC');
 
-define('API_KEY', ''); // //-- Insert your API key 
+define('API_KEY', ''); // //-- Insert your API key
 define('PHP_SELF', htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'));
 
 require_once("FFN.class.php");
@@ -21,9 +21,6 @@ if (!API_KEY) {
 	echo 'You did not set the API_KEY for your application. This is required.';
 	exit;
 }
-
-// Test setup/environment
-$ffn->test_setup();
 
 $display = isset($_GET['display']) ? $_GET['display'] : FALSE;
 ?>
@@ -50,26 +47,24 @@ $display = isset($_GET['display']) ? $_GET['display'] : FALSE;
 if ($display == "schedule") {
 
 	$schedule = $ffn->getSchedule();
-	
+
 	echo '<h4>Season Schedule</h4>';
-	echo '<p>Season: ', $schedule->Season, '</p>';
+	echo '<p>Current Week: ', $schedule['currentWeek'], '</p>';
 	
-	foreach($schedule->Games AS $game) {
+	foreach($schedule['Schedule'] AS $game) {
 		echo '<p>';
-		echo 'Week: ', $game->Week, ' ', $game->AwayTeam, ' at ', $game->HomeTeam, ' on ', date("M j, Y", strtotime($game->GameDate)), ' at ', $game->GameTime, ' ', $schedule->Timezone;
+		echo 'Week: ', $game['gameWeek'], ' ', $game['awayTeam'], ' at ', $game['homeTeam'], ' on ', $game['gameDate'], ' at ', $game['gameTimeET'], ' ET', ' playing on ', $game['tvStation'];
 		echo '</p>';
 	}
 }
 
 /**** Player Listing **********************************************/ 
 if ($display == "players") {
-
 	$players = $ffn->getPlayers();
-	
 	echo '<h4>All NFL Players</h4>';
-	foreach($players->Players AS $player) {
+	foreach($players AS $player) {
 		echo '<p>';
-		echo playerLink($player->playerId, $player->Name), ' : ', $player->Position, ' : ', $player->Team;
+		echo playerLink($player['playerId'], $player['displayName']), ' : ', $player['position'], ' : ', $player['team'];
 		echo '</p>';
 	}
 }
@@ -88,86 +83,46 @@ if ($display == "playerDetails") {
 	} else {
 	
 		$playerDetails = $ffn->getPlayerDetails($_GET['playerId']);
-		
-		echo '<h4>Player Details</h4>';
-		echo '<p>First Name: ', $playerDetails->FirstName, '</p>';
-		echo '<p>Last Name: ',  $playerDetails->LastName,  '</p>';
-		echo '<p>Team: ', $playerDetails->Team, '</p>';
-		echo '<p>Position: ', $playerDetails->Position, '</p>';
-		echo '<p><strong>Articles</strong></p>';
-		
-		foreach($playerDetails->News AS $story) {
-			echo '<p><a href="', $story->Source, '">', $story->Title, '</a> Published: ', $story->Published, '</p>';
+		if ($playerDetails['Error']) {
+			echo $playerDetails['Error'];
+			exit;
 		}
+		// @todo Implement this properly
+		print "<pre>";
+		print_r($playerDetails);
+		print "</pre>";
 	}
 }
 
 /**** Draft Rankings **********************************************/
 if ($display == "draftRankings") {
+	$ppr = empty($_GET['ppr']) ? 0 : 1;
+	$rankings = $ffn->getDraftRankings($ppr);
 	
-	if (empty($_GET['position'])) {
-	?>
-		<form action="<?php echo PHP_SELF; ?>" method="get">
-		<input type="hidden" name="display" value="draftRankings" />
-		<p>Position: 
-			<select name="position" size="1">
-				<option value="ALL" selected>ALL</option>
-				<option value="QB">QB</option>
-				<option value="RB">RB</option>
-				<option value="WR">WR</option>
-				<option value="TE">TE</option>
-				<option value="DEF">DEF</option>
-				<option value="K">K</option>
-			</select>
-		</p>
-		<p># of Results: <input type="text" name="limit" size="4" value="10" /> (1 - 1000)</p>
-		<p>Include Strength of Schedule? 
-			<select name="sos" size="1">
-				<option value="1" selected>Yes</option>
-				<option value="0">No</option>
-			</select>
-		</p>
-		<p><input type="submit" name="submit" value="submit"/></p>
-		</form>
-	<?php
-	} else {
-
-		$draft = $ffn->getDraftRankings($_GET['position'], $_GET['limit'], $_GET['sos']);
-		
-		echo '<h4>Preseason Draft Rankings</h4>';
-		echo '<p>The last number is the defensive rank, where a lower number means a tougher defense.</p>';
-		foreach($draft->Players AS $player) {
-			echo '<p>';
-			echo playerLink($player->playerId, $player->PlayerName), ' ', $player->Team, ' ', $player->Position;
-			echo ' Overall Rank: ', $player->OverallRank, ' Rank among ', $player->Position, "'s: ", $player->PositionRank, ' Bye Week: ', $player->ByeWeek;
-			echo '</p>';
-			
-			if (!empty($player->StrengthOfSchedule)) {
-				echo '<p>';
-				foreach ($player->StrengthOfSchedule AS $sched) {
-					echo 'Week ', $sched->WeekNumber, ' vs ', $sched->Opponent, ' : ', $sched->DefensiveRank, '<br />';
-				}
-			}
-			echo '</p>';
-		}
+	echo '<h3>Rankings. Is PPR enabled? ' . (empty($rankings['PPR']) ? 'No' : 'Yes') . '</h3>';
+	echo "<pre>";
+	foreach ($rankings['DraftRankings'] as $rank) {
+		print_r($rank);
 	}
+	echo "</pre>";
 }
 
 /**** Player Injuries **********************************************/
 if ($display == "injuries") {
+	$week = empty($_GET['week']) ? 1 : (int) $_GET['week'];
 
-	//-- Get the injuries for a specific week (replace "1" with a week number) --
-	// @todo handle week number
-	$injuries = $ffn->getInjuries("1");
+	$injuries = $ffn->getInjuries($week);
 	
 	echo '<h4>Injuries</h4>';
-
-	foreach($injuries->Injuries AS $inj) {
-		echo '<p>';
-		echo 'Week: ', $inj->Week, ' ', $inj->Player, ' ', $inj->Team, ' ', $inj->Position;
-		echo ' Injury: ', $inj->Injury, ' Practice Status: ', $inj->PracticeStatus, ' Game Status: ', $inj->GameStatus, ' Updated on ', date("M j, Y", strtotime($inj->Updated));
-		echo '</p>';
+	if ($injuries['Error']) {
+		echo $injuries['Error'];
+		exit;
 	}
+
+	// @todo Implement this properly
+	echo "<pre>";
+	print_r($injuries);
+	echo "</pre>";
 }
 
 /**** Weekly Rankings **********************************************/
@@ -196,21 +151,21 @@ if ($display == "weeklyRankings") {
 				?>
 			</select>
 			</p>
+			<p>PPR: 
+			<select name="ppr" size="1">
+				<option value="1" selected>Yes</option>
+				<option value="0">No</option>
+			</select>
+			</p>
 			<p><input type="submit" /></p>
 		</form>
 	<?php 
 	} else {
 
-		$sitStart = $ffn->getWeeklyRankings($_GET['position'], $_GET['week']);
+		$sitStart = $ffn->getWeeklyRankings($_GET['position'], $_GET['week'], $_GET['ppr']);
 		
-		echo '<h4>Weekly Sit/Start Rankings</h4>';
-		foreach($sitStart->Players AS $player) {
-			echo '<p>';
-			echo playerLink($player->playerId, $player->PlayerName), ' ', $player->Team, ' ', $player->Position, ' Rank: ', $player->Rank;
-			echo ' Standard Scoring: Low ', $player->StandardLow, ' Nerd Proj ', $player->StandardPoints, ' High ', $player->StandardHigh;
-			echo ' PPR: Low ', $player->PPRLow, ' Nerd Proj ', $player->PPR, ' High ', $player->PPRHigh;
-			echo '</p>';
-		}
+		print_r($sitStart);
+		exit;
 	}
 }
 
@@ -235,6 +190,7 @@ if (!$display) {
 	</ul>
 	<p>View the samples on this page to retrieve data for each of the various services above.</p>
 	<p>This is a work in progress, so please email <a href="mailto:nerd@fantasyfootballnerd.com">nerd@fantasyfootballnerd.com</a> with questions, bug reports, etc.</p>
+	<p>Note: this is an incomplete list of features. For a complete list of API calls available to you, see <a href="http://www.fantasyfootballnerd.com/fantasy-football-api">http://www.fantasyfootballnerd.com/fantasy-football-api</a></p>
 
 <?php 
 }

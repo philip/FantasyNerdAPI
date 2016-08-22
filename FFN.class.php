@@ -21,6 +21,8 @@ class FFN {
 	 * @var int
 	**/
 	private $apiKey;
+	
+	private $baseurl = "http://www.fantasyfootballnerd.com/service/";
 
 	/**
 	 * Error Message - a holder for any error that we may encounter
@@ -44,29 +46,11 @@ class FFN {
 	 * @return object
 	**/
 	public function getSchedule() {
-
-		$endpoint = "http://api.fantasyfootballnerd.com/ffnScheduleXML.php?apiKey=" . $this->apiKey;
-
-		$data = $this->call($endpoint);
-
-		$obj = new stdClass;
-		$doc = new DOMDocument();
-		$doc->loadXML($data);
-		$obj->Season   = $doc->getElementsByTagName("Schedule")->item(0)->getAttribute("Season");
-		$obj->Timezone = $doc->getElementsByTagName("Schedule")->item(0)->getAttribute("Timezone");
-		$obj->Games    = array();
-
-		foreach ($doc->getElementsByTagName("Game") AS $game) {
-			$obj->Games[] = (object) array(
-				"Week"		=> $game->getAttribute("Week"),
-				"gameId"	=> $game->getAttribute("gameId"),
-				"GameDate"	=> $game->getAttribute("GameDate"),
-				"HomeTeam"	=> $game->getAttribute("HomeTeam"),
-				"AwayTeam"	=> $game->getAttribute("AwayTeam"),
-				"GameTime"	=> $game->getAttribute("GameTime"),
-				);
+		$url  = $this->baseurl . "schedule/json/" . $this->apiKey . "/";
+		if (!$data = $this->fetch($url)) {
+			return false;
 		}
-		return $obj;
+		return $data;
 	}//-----
 
 	/**
@@ -74,33 +58,15 @@ class FFN {
 	 * This will return a stdClass object with all the NFL players. This does not need to be called
 	 * more than once per week as it doesn't change with much frequency.
 	 *
-	 * @return object
+	 * @return array
 	**/
 	public function getPlayers() {
-
-		$endpoint = "http://api.fantasyfootballnerd.com/ffnPlayersXML.php?apiKey=" . $this->apiKey;
-
-		$data = $this->call($endpoint);
-
-		$obj = new stdClass;
-		$doc = new DOMDocument();
-		$doc->loadXML($data);
-
-		if ($doc->getElementsByTagName("Error")->length > 0) {
-			$this->errorMsg = $doc->getElementsByTagName("Error")->item(0)->nodeValue;
+		$url  = $this->baseurl . "players/json/" . $this->apiKey . "/";
+		if (!$data = $this->fetch($url)) {
+			return false;
 		}
-
-		$obj->Players = array();
-		foreach ($doc->getElementsByTagName("Player") AS $player) {
-			$obj->Players[] = (object) array(
-				"playerId"	=> $player->getAttribute("playerId"),
-				"Name"		=> $player->getAttribute("Name"),
-				"Position"	=> $player->getAttribute("Position"),
-				"Team"		=> $player->getAttribute("Team")
-			);
-		}
-		return $obj;
-	}//-----
+		return $data['Players'];
+	}
 
 	/**
 	 * Get player details
@@ -110,33 +76,11 @@ class FFN {
 	 * @return object
 	**/
 	public function getPlayerDetails($playerId) {
-
-		$endpoint = "http://api.fantasyfootballnerd.com/ffnPlayerDetailsXML.php?apiKey=" . $this->apiKey . "&playerId=" . $playerId;
-
-		$data = $this->call($endpoint);
-
-		$obj = new stdClass;
-		$doc = new DOMDocument();
-		$doc->loadXML($data);
-
-		if ($doc->getElementsByTagName("Error")->length > 0) {
-			$this->errorMsg = $doc->getElementsByTagName("Error")->item(0)->nodeValue;
+		$url  = $this->baseurl . "player/json/" . $this->apiKey . "/" . $playerId;
+		if (!$data = $this->fetch($url)) {
+			return false;
 		}
-
-		$obj->FirstName	= $doc->getElementsByTagName("FirstName")->item(0)->nodeValue;
-		$obj->LastName	= $doc->getElementsByTagName("LastName")->item(0)->nodeValue;
-		$obj->Team		= $doc->getElementsByTagName("Team")->item(0)->nodeValue;
-		$obj->Position	= $doc->getElementsByTagName("Position")->item(0)->nodeValue;
-		$obj->News		= array();
-
-		foreach ($doc->getElementsByTagName("Article") AS $article) {
-			$obj->News[] = (object) array(
-				"Title"		=> $article->getElementsByTagName("Title")->item(0)->nodeValue,
-				"Source"	=> $article->getElementsByTagName("Source")->item(0)->nodeValue,
-				"Published"	=> $article->getElementsByTagName("Published")->item(0)->nodeValue,
-			);
-		}
-		return $obj;
+		return $data;
 	}//-----
 
 	/**
@@ -148,49 +92,12 @@ class FFN {
 	 * @param int $sos Return the Strength of Schedule for every player? Pass a 1 for yes, 0 for no
 	 * @return object
 	**/
-	public function getDraftRankings($position, $limit, $sos) {
-
-		$endpoint = "http://api.fantasyfootballnerd.com/ffnRankingsXML.php?apiKey=" . $this->apiKey . "&position=" . $position . "&limit=" . $limit . "&sos=" . $sos;
-
-		$data = $this->call($endpoint);
-
-		$obj = new stdClass;
-		$doc = new DOMDocument();
-		$doc->loadXML($data);
-
-		if ($doc->getElementsByTagName("Error")->length > 0) {
-			$this->errorMsg = $doc->getElementsByTagName("Error")->item(0)->nodeValue;
+	public function getDraftRankings($ppr = 0) {
+		$url  = $this->baseurl . "draft-rankings/json/" . $this->apiKey . "/" . $ppr;
+		if (!$data = $this->fetch($url)) {
+			return false;
 		}
-
-		$obj->Players = array();
-		foreach ($doc->getElementsByTagName("Player") AS $player) {
-			$p = array(
-				"playerId"		=> $player->getAttribute("playerId"),
-				"PlayerName"	=> $player->getAttribute("Name"),
-				"Position"		=> $player->getAttribute("Position"),
-				"Team"			=> $player->getAttribute("Team"),
-				"OverallRank"	=> $player->getAttribute("OverallRank"),
-				"PositionRank"	=> $player->getAttribute("PositionRank"),
-				"ByeWeek"		=> $player->getAttribute("ByeWeek"),
-			);
-
-			if ($player->getElementsByTagName("Week")->length > 0) {
-				$weeks = array();
-				foreach ($player->getElementsByTagName("Week") AS $week) {
-					$weeks[] = (object) array(
-						"WeekNumber"	=> $week->getAttribute("Number"),
-						"Opponent"		=> $week->getAttribute("Opponent"),
-						"DefensiveRank"	=> $week->getAttribute("DefensiveRank"),
-					);
-				}
-			}
-			
-			if ($sos) {
-				$p['StrengthOfSchedule'] = $weeks;
-			}
-			$obj->Players[] = (object)$p;
-		}
-		return $obj;
+		return $data;
 	}//-----
 
 	/**
@@ -200,42 +107,12 @@ class FFN {
 	 * @param int $week The week number to retrieve injuries for (1-17)
 	 * @return object
 	**/
-	public function getInjuries($week) {
-
-		$week = (int) $week;
-		$endpoint = "http://api.fantasyfootballnerd.com/ffnInjuriesXML.php?apiKey=" . $this->apiKey . "&week=" . $week;
-
-		$data = $this->call($endpoint);
-
-		$obj = new stdClass;
-		$doc = new DOMDocument();
-		$doc->loadXML($data);
-
-		if ($doc->getElementsByTagName("Error")->length > 0) {
-			$this->errorMsg = $doc->getElementsByTagName("Error")->item(0)->nodeValue;
+	public function getInjuries($week = 1) {
+		$url  = $this->baseurl . "injuries/json/" . $this->apiKey . "/" . $week;
+		if (!$data = $this->fetch($url)) {
+			return false;
 		}
-
-		$obj->Injuries = array();
-		if ($doc->getElementsByTagName("Team")->length > 0) {
-			$inj = array();
-			foreach ($doc->getElementsByTagName("Injuries")->item(0)->getElementsByTagName("Team") AS $team) {
-				$teamId = $team->getAttribute("Code");
-				foreach ($team->getElementsByTagName("Injury") AS $inj) {
-					$obj->Injuries[] = (object) array(
-						"Week"			=> $inj->getElementsByTagName("Week")->item(0)->nodeValue,
-						"playerId"		=> $inj->getElementsByTagName("playerId")->item(0)->nodeValue,
-						"Player"		=> $inj->getElementsByTagName("PlayerName")->item(0)->nodeValue,
-						"Team"			=> $inj->getElementsByTagName("Team")->item(0)->nodeValue,
-						"Position"		=> $inj->getElementsByTagName("Position")->item(0)->nodeValue,
-						"Injury"		=> $inj->getElementsByTagName("InjuryDesc")->item(0)->nodeValue,
-						"PracticeStatus"=> $inj->getElementsByTagName("PracticeStatusDesc")->item(0)->nodeValue,
-						"GameStatus"	=> $inj->getElementsByTagName("GameStatusDesc")->item(0)->nodeValue,
-						"Updated"		=> $inj->getElementsByTagName("LastUpdate")->item(0)->nodeValue,
-					);
-				}
-			}
-		}
-		return $obj;
+		return $data;
 	}//-----
 
 	/**
@@ -246,41 +123,12 @@ class FFN {
 	 * @param int $week The week to return results for (1-17)
 	 * @return object
 	**/
-	public function getWeeklyRankings($position, $week) {
-
-		$week = (int) $week;
-		$endpoint = "http://api.fantasyfootballnerd.com/ffnSitStartXML.php?apiKey=" . $this->apiKey . "&week=" . $week . "&position=" . $position;
-
-		$data = $this->call($endpoint);
-
-		$obj = new stdClass;
-		$doc = new DOMDocument();
-		$doc->loadXML($data);
-
-		if ($doc->getElementsByTagName("Error")->length > 0) {
-			$this->errorMsg = $doc->getElementsByTagName("Error")->item(0)->nodeValue;
+	public function getWeeklyRankings($position = 'QB', $week = 1, $ppr = 1) {
+		$url  = $this->baseurl . "weekly-rankings/json/" . $this->apiKey . "/" . $position . '/' . $week . '/' . $ppr;
+		if (!$data = $this->fetch($url)) {
+			return false;
 		}
-
-		$obj->Players = array();
-		foreach ($doc->getElementsByTagName("Player") AS $player) {
-			$p = array(
-				"playerId"			=> $player->getAttribute("playerId"),
-				"PlayerName"		=> $player->getAttribute("Name"),
-				"Position"			=> $player->getAttribute("Position"),
-				"Team"				=> $player->getAttribute("Team"),
-				"Week"				=> $player->getAttribute("Week"),
-				"Rank"				=> $player->getAttribute("Rank"),
-				"ProjectedPoints"	=> $player->getAttribute("ProjectedPoints"),
-				"StandardPoints"	=> $player->getElementsByTagName("Standard")->item(0)->nodeValue,
-				"StandardLow"		=> $player->getElementsByTagName("StandardLow")->item(0)->nodeValue,
-				"StandardHigh"		=> $player->getElementsByTagName("StandardHigh")->item(0)->nodeValue,
-				"PPR"				=> $player->getElementsByTagName("PPR")->item(0)->nodeValue,
-				"PPRLow"			=> $player->getElementsByTagName("PPRLow")->item(0)->nodeValue,
-				"PPRHigh"			=> $player->getElementsByTagName("PPRHigh")->item(0)->nodeValue
-			);
-			$obj->Players[] = (object) $p;
-		}
-		return $obj;
+		return $data;
 	}//-----
 
 	/**
@@ -289,33 +137,17 @@ class FFN {
 	 *
 	 * @param string $url The endpoint url that we're calling
 	**/
-	private function call($url) {
+	private function fetch($url) {
+		$json = file_get_contents($url);
 
-		$ch = curl_init($url);
-		curl_setopt($ch, CURLOPT_HEADER, 0);
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-		curl_setopt($ch, CURLOPT_COOKIESESSION, TRUE);
-
-		$output = curl_exec($ch);
-		curl_close($ch);
-
-		return $output;
-	}//-----------------------------
-
-	/**
-	 * Utility to check if the PHP environment will work with this class.
-	 * TODO: What else is required?
-	 *
-	**/
-	public function test_setup() {
-		$extensions = array('dom', 'curl');
-		foreach ($extensions as $extension) {
-			if (!extension_loaded($extension)) {
-				echo "Fatal Error: The $extension extension is required by this class.";
-				exit;
-			}
+		if (empty($json)) {
+			return false;
 		}
-		return true;
-	}
+		$data = json_decode($json, true);
+		if (empty($data) || !is_array($data)) {
+			return false;
+		}
+		return $data;
+	}//-----------------------------
 }
 ?>
