@@ -1,8 +1,8 @@
 <?php
 /**
-This page will create the FFN object and then show you how to call the different methods 
-to return the information that you want. The first thing you need to do is register for an 
-API Key at FantasyFootballNerd.com.  When you register for one, enter into the API_KEY 
+This page will create the FFN object and then show you how to call the different methods
+to return the information that you want. The first thing you need to do is register for an
+API Key at FantasyFootballNerd.com.  When you register for one, enter into the API_KEY
 constant below.  You won't be able to get data without an API key. This is the only
 edit you are required to make, here.
 **/
@@ -50,7 +50,7 @@ if ($display == "schedule") {
 
 	echo '<h4>Season Schedule</h4>';
 	echo '<p>Current Week: ', $schedule['currentWeek'], '</p>';
-	
+
 	foreach($schedule['Schedule'] AS $game) {
 		echo '<p>';
 		echo 'Week: ', $game['gameWeek'], ' ', $game['awayTeam'], ' at ', $game['homeTeam'], ' on ', $game['gameDate'], ' at ', $game['gameTimeET'], ' ET', ' playing on ', $game['tvStation'];
@@ -58,7 +58,7 @@ if ($display == "schedule") {
 	}
 }
 
-/**** Player Listing **********************************************/ 
+/**** Player Listing **********************************************/
 if ($display == "players") {
 	$players = $ffn->getPlayers();
 	echo '<h4>All NFL Players</h4>';
@@ -71,7 +71,7 @@ if ($display == "players") {
 
 /**** Player Details **********************************************/
 if ($display == "playerDetails") {
-	
+
 	if (empty($_GET['playerId'])) {
 	?>
 		<form action="<?php echo PHP_SELF; ?>" method="get">
@@ -79,9 +79,9 @@ if ($display == "playerDetails") {
 		<p>FFN playerId: <input type="text" name="playerId" size="4" /></p>
 		<p><input type="submit" /></p>
 		</form>
-	<?php 
+	<?php
 	} else {
-	
+
 		$playerDetails = $ffn->getPlayerDetails($_GET['playerId']);
 		if ($playerDetails['Error']) {
 			echo $playerDetails['Error'];
@@ -98,7 +98,7 @@ if ($display == "playerDetails") {
 if ($display == "draftRankings") {
 	$ppr = empty($_GET['ppr']) ? 0 : 1;
 	$rankings = $ffn->getDraftRankings($ppr);
-	
+
 	echo '<h3>Rankings. Is PPR enabled? ' . (empty($rankings['PPR']) ? 'No' : 'Yes') . '</h3>';
 	echo "<pre>";
 	foreach ($rankings['DraftRankings'] as $rank) {
@@ -112,7 +112,7 @@ if ($display == "injuries") {
 	$week = empty($_GET['week']) ? 1 : (int) $_GET['week'];
 
 	$injuries = $ffn->getInjuries($week);
-	
+
 	echo '<h4>Injuries</h4>';
 	if ($injuries['Error']) {
 		echo $injuries['Error'];
@@ -127,12 +127,12 @@ if ($display == "injuries") {
 
 /**** Weekly Rankings **********************************************/
 if ($display == "weeklyRankings") {
-	
+
 	if (empty($_GET['position']) && empty($_GET['week'])) {
 	?>
 		<form action="<?php echo PHP_SELF; ?>" method="get">
 			<input type="hidden" name="display" value="weeklyRankings" />
-			<p>Position: 
+			<p>Position:
 			<select name="position" size="1">
 				<option value="QB" selected>QB</option>
 				<option value="RB">RB</option>
@@ -142,16 +142,16 @@ if ($display == "weeklyRankings") {
 				<option value="K">K</option>
 			</select>
 			</p>
-			<p>Week: 
+			<p>Week:
 			<select name="week" size="1">
-				<?php 
+				<?php
 				for ($i = 1; $i < 18; $i++) {
 					echo "<option value='$i'>$i</option>";
-				} 
+				}
 				?>
 			</select>
 			</p>
-			<p>PPR: 
+			<p>PPR:
 			<select name="ppr" size="1">
 				<option value="1" selected>Yes</option>
 				<option value="0">No</option>
@@ -159,11 +159,11 @@ if ($display == "weeklyRankings") {
 			</p>
 			<p><input type="submit" /></p>
 		</form>
-	<?php 
+	<?php
 	} else {
 
 		$sitStart = $ffn->getWeeklyRankings($_GET['position'], $_GET['week'], $_GET['ppr']);
-		
+
 		print_r($sitStart);
 		exit;
 	}
@@ -192,7 +192,7 @@ if (!$display) {
 	<p>This is a work in progress, so please email <a href="mailto:nerd@fantasyfootballnerd.com">nerd@fantasyfootballnerd.com</a> with questions, bug reports, etc.</p>
 	<p>Note: this is an incomplete list of features. For a complete list of API calls available to you, see <a href="http://www.fantasyfootballnerd.com/fantasy-football-api">http://www.fantasyfootballnerd.com/fantasy-football-api</a></p>
 
-<?php 
+<?php
 }
 
 if ($ffn->errorMsg) {

@@ -21,7 +21,7 @@ class FFN {
 	 * @var int
 	**/
 	private $apiKey;
-	
+
 	private $baseurl = "http://www.fantasyfootballnerd.com/service/";
 
 	/**
