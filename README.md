@@ -1,3 +1,6 @@
+### Status
+This is old and probably does not work. I do not recommend using this.
+
 ### Introduction
 
 This fork began long ago, at a time when the API was more difficult to use. The API is much simpler now. This code was modified to work with the new API, but it's incomplete. However, it works, and is a decent start.
