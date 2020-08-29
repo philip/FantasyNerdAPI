@@ -1,9 +1,9 @@
 ### Status
-This is old and probably does not work. I do not recommend using this.
+This is old but surprisingly works (checked in 2020). I do not recommend using this but maybe it'll help.
 
 ### Introduction
 
-This fork began long ago, at a time when the API was more difficult to use. The API is much simpler now. This code was modified to work with the new API, but it's incomplete. However, it works, and is a decent start.
+This fork began long ago, at a time when the API was more difficult to use. The API is much simpler now. This code was modified to work with the new API, but it's incomplete. However, it works and is a decent start.
 
 This is a fork of the original Fantasy Football Nerd API. It follows their license.
 
